@@ -74,10 +74,11 @@ public final class GboardLongPressQuickActions1803Runtime {
                 GboardLongPressQuickActions1803ReflectionHandles handles =
                         reflectionHandles(classLoader);
                 Context context = softKeyView == null ? null : softKeyView.getContext();
+                Object identityMetadata = dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime.resolveOriginalKeyMetadataForPatchInterop(metadata);
                 GboardLongPressQuickActions1803Policy.QuickAction action =
                         GboardLongPressQuickActions1803Policy.plan(
-                                handles.extractKeyId(metadata),
-                                handles.extractPressText(metadata),
+                                handles.extractKeyId(identityMetadata),
+                                handles.extractPressText(identityMetadata),
                                 handles.extractLongPressCodes(metadata));
                 if (action == null) {
                     UNPATCHED_METADATA_MARKERS.put(metadata, Boolean.TRUE);
@@ -113,8 +114,9 @@ public final class GboardLongPressQuickActions1803Runtime {
                     reflectionHandles(service.getClass().getClassLoader());
             Object metadata = handles.extractEventMetadata(event);
             String actionTypeName = handles.extractEventActionTypeName(event);
-            int keyId = handles.extractKeyId(metadata);
-            String pressText = handles.extractPressText(metadata);
+            Object identityMetadata = dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime.resolveOriginalKeyMetadataForPatchInterop(metadata);
+            int keyId = handles.extractKeyId(identityMetadata);
+            String pressText = handles.extractPressText(identityMetadata);
             int selectedCode = handles.extractSelectedEventCode(event);
             boolean enabled = GboardLongPressQuickActionsRuntimeSettings.isEnabled();
             boolean quickActionEvent = GboardLongPressQuickActions1803Policy
@@ -130,6 +132,15 @@ public final class GboardLongPressQuickActions1803Runtime {
                     GboardLongPressQuickActions1803Policy.contextMenuActionFor(
                             keyId, pressText, actionTypeName, selectedCode);
             if (contextMenuAction == null) {
+                if (selectedCode == -0x27f0) { // SWITCH_TOP_ROW
+                    Log.i(TAG, LOG_PREFIX + "Triggering manual row switch via code -0x27f0");
+                    dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime
+                            .triggerManualRowSwitch(service);
+                    return true;
+                }
+                if (selectedCode == -0x27f1) { // TOGGLE_CASE
+                    return attemptToggleCaseAction(service.getCurrentInputConnection());
+                }
                 return false;
             }
             if (!attemptContextMenuAction(
@@ -160,8 +171,9 @@ public final class GboardLongPressQuickActions1803Runtime {
             if (metadata == null) {
                 return;
             }
-            int keyId = handles.extractKeyId(metadata);
-            String pressText = handles.extractPressText(metadata);
+            Object identityMetadata = dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime.resolveOriginalKeyMetadataForPatchInterop(metadata);
+            int keyId = handles.extractKeyId(identityMetadata);
+            String pressText = handles.extractPressText(identityMetadata);
             int[] longPressCodes = handles.extractLongPressCodes(metadata);
             if (!GboardLongPressQuickActions1803Policy.containsAssignedAction(
                     keyId, pressText, longPressCodes)) {
@@ -183,10 +195,70 @@ public final class GboardLongPressQuickActions1803Runtime {
         return true;
     }
 
+    static boolean attemptToggleCaseAction(InputConnection connection) {
+        if (connection == null) {
+            return false;
+        }
+        CharSequence selectedText = connection.getSelectedText(0);
+        if (selectedText != null && selectedText.length() > 0) {
+            String toggled = toggleCase(selectedText.toString());
+            connection.commitText(toggled, 1);
+            return true;
+        }
+
+        CharSequence before = connection.getTextBeforeCursor(64, 0);
+        if (before == null || before.length() == 0) {
+            return false;
+        }
+
+        String text = before.toString();
+        int end = text.length();
+        while (end > 0 && Character.isWhitespace(text.charAt(end - 1))) {
+            end--;
+        }
+        if (end == 0) {
+            return false;
+        }
+
+        int start = end;
+        while (start > 0 && !Character.isWhitespace(text.charAt(start - 1))) {
+            start--;
+        }
+
+        String lastWord = text.substring(start, end);
+        String suffix = text.substring(end);
+        String toggledWord = toggleCase(lastWord);
+
+        connection.beginBatchEdit();
+        connection.deleteSurroundingText(text.length() - start, 0);
+        connection.commitText(toggledWord + suffix, 1);
+        connection.endBatchEdit();
+        return true;
+    }
+
+    private static String toggleCase(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        boolean hasUppercase = false;
+        for (int i = 0; i < text.length(); i++) {
+            if (Character.isUpperCase(text.charAt(i))) {
+                hasUppercase = true;
+                break;
+            }
+        }
+        if (hasUppercase) {
+            return text.toLowerCase();
+        } else {
+            return Character.toUpperCase(text.charAt(0)) + text.substring(1);
+        }
+    }
+
     static void rememberPatchedMetadata(Object original, Object patched) {
         if (original == null || patched == null) {
             return;
         }
+        dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime.inheritPatchedMetadataForPatchInterop(original, patched);
         PATCHED_METADATA_BY_ORIGINAL.put(original, patched);
         ORIGINAL_METADATA_BY_PATCHED.put(patched, new WeakReference<>(original));
         PATCHED_METADATA_MARKERS.put(patched, Boolean.TRUE);

@@ -197,8 +197,9 @@ final class GboardTopRowSwipeRuntimeSupport {
             return false;
         }
         for (int index = 0; index < ENGLISH_QWERTY_TOP_ROW_LABELS.length; index++) {
-            if (!ENGLISH_QWERTY_TOP_ROW_LABELS[index]
-                    .equals(asciiLowercase(labels.get(index)))) {
+            String label = asciiLowercase(labels.get(index));
+            String expected = ENGLISH_QWERTY_TOP_ROW_LABELS[index];
+            if (!expected.equals(label) && !(index == 5 && "z".equals(label))) {
                 return false;
             }
         }

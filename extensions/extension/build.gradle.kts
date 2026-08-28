@@ -339,3 +339,16 @@ tasks.named("preBuild") {
     dependsOn(generateQuickJsNativePayload)
     dependsOn(generateSettingsText)
 }
+
+tasks.register<Exec>("installExtension") {
+    dependsOn("assembleDebug")
+    group = "install"
+    description = "Installs the extension APK on the connected device."
+    
+    val apkFile = layout.buildDirectory.file("outputs/apk/debug/extension-debug.apk")
+    
+    executable = "adb"
+    args("install", "-r", apkFile.get().asFile.absolutePath)
+}
+
+
