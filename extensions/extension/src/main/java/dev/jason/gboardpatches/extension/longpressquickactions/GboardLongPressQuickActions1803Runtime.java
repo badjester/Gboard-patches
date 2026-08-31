@@ -57,6 +57,7 @@ public final class GboardLongPressQuickActions1803Runtime {
     }
 
     public static Object maybePatchMetadata(Object metadata, View softKeyView) {
+        metadata = GboardGlobeDragRuntime.maybePatchMetadata(metadata, softKeyView);
         Object incomingMetadata = metadata;
         try {
             boolean enabled = GboardLongPressQuickActionsRuntimeSettings.isEnabled();
@@ -150,6 +151,9 @@ public final class GboardLongPressQuickActions1803Runtime {
         if (service == null || event == null) {
             return false;
         }
+        if (GboardGlobeDragRuntime.maybeHandleInputEvent(service, event)) {
+            return true;
+        }
         try {
             GboardLongPressQuickActions1803ReflectionHandles handles =
                     reflectionHandles(service.getClass().getClassLoader());
@@ -196,14 +200,8 @@ public final class GboardLongPressQuickActions1803Runtime {
                 }
                 return false;
             }
-            if (!attemptContextMenuAction(
-                    service.getCurrentInputConnection(), contextMenuAction.intValue())) {
-                return false;
-            }
-            logInfo(ACTION_LOG_COUNT, 30,
-                    "performed contextMenuAction=0x"
-                            + Integer.toHexString(contextMenuAction.intValue()));
-            return true;
+            return consumeRecognizedContextMenuAction(
+                    service::getCurrentInputConnection, contextMenuAction.intValue());
         } catch (Throwable throwable) {
             logError("input event handling failed", throwable);
             return false;
@@ -214,6 +212,7 @@ public final class GboardLongPressQuickActions1803Runtime {
             Object pointerTracker,
             View softKeyView) {
         try {
+            GboardGlobeDragRuntime.onPointerOwner(pointerTracker, softKeyView);
             if (pointerTracker == null || softKeyView == null
                     || !GboardLongPressQuickActionsRuntimeSettings.isEnabled()) {
                 return;
@@ -241,11 +240,46 @@ public final class GboardLongPressQuickActions1803Runtime {
     }
 
     static boolean attemptContextMenuAction(InputConnection connection, int actionId) {
-        if (connection == null || actionId == 0) {
+        if (!GboardEditingShortcutDispatchGuard.shouldDispatchContextMenuAction(
+                connection, actionId)) {
             return false;
         }
-        connection.performContextMenuAction(actionId);
+        try {
+            connection.performContextMenuAction(actionId);
+            return true;
+        } catch (Throwable throwable) {
+            logError("editor action failed", throwable);
+            return false;
+        }
+    }
+
+    static boolean consumeRecognizedContextMenuAction(
+            InputConnection connection, int actionId) {
+        return consumeRecognizedContextMenuAction(() -> connection, actionId);
+    }
+
+    static boolean consumeRecognizedContextMenuAction(
+            InputConnectionSupplier connectionSupplier, int actionId) {
+        try {
+            InputConnection connection = connectionSupplier == null
+                    ? null : connectionSupplier.get();
+            if (attemptContextMenuAction(connection, actionId)) {
+                logInfo(ACTION_LOG_COUNT, 30,
+                        "performed contextMenuAction=0x"
+                                + Integer.toHexString(actionId));
+            } else {
+                logInfo(ACTION_LOG_COUNT, 30,
+                        "suppressed unavailable contextMenuAction=0x"
+                                + Integer.toHexString(actionId));
+            }
+        } catch (Throwable throwable) {
+            logError("editor connection lookup failed", throwable);
+        }
         return true;
+    }
+
+    interface InputConnectionSupplier {
+        InputConnection get() throws Throwable;
     }
 
     static boolean attemptToggleCaseAction(InputConnection connection) {
@@ -305,6 +339,7 @@ public final class GboardLongPressQuickActions1803Runtime {
         } else {
             return Character.toUpperCase(text.charAt(0)) + text.substring(1);
         }
+    }
     }
 
     static void rememberPatchedMetadata(Object original, Object patched) {

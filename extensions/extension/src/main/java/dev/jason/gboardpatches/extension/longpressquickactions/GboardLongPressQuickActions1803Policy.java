@@ -2,17 +2,17 @@ package dev.jason.gboardpatches.extension.longpressquickactions;
 
 public final class GboardLongPressQuickActions1803Policy {
     private static final QuickAction SELECT_ALL = new QuickAction(
-            -0x2766, 0x7f0804e3, "Select all", 0x102001f);
+            -0x2766, 0x7f0804e3, GboardEditingShortcutPolicy.Shortcut.SELECT_ALL, true);
     private static final QuickAction UNDO = new QuickAction(
-            -0x273d, 0x7f08051f, "Undo", 0);
+            -0x273d, 0x7f08051f, GboardEditingShortcutPolicy.Shortcut.UNDO, false);
     private static final QuickAction COPY = new QuickAction(
-            -0x2767, 0x7f08044f, "Copy", 0x1020021);
+            -0x2767, 0x7f08044f, GboardEditingShortcutPolicy.Shortcut.COPY, true);
     private static final QuickAction CUT = new QuickAction(
-            -0x2769, 0x7f080450, "Cut", 0x1020020);
+            -0x2769, 0x7f080450, GboardEditingShortcutPolicy.Shortcut.CUT, true);
     private static final QuickAction PASTE = new QuickAction(
-            -0x2768, 0x7f080452, "Paste", 0x1020022);
+            -0x2768, 0x7f080452, GboardEditingShortcutPolicy.Shortcut.PASTE, true);
     private static final QuickAction REDO = new QuickAction(
-            -0x27a3, 0x7f0804df, "Redo", 0);
+            -0x27a3, 0x7f0804df, GboardEditingShortcutPolicy.Shortcut.REDO, false);
     private static final QuickAction SWITCH_TOP_ROW = new QuickAction(
             -0x27f0, 0x7f08022a, "Switch top row", 0);
     private static final QuickAction TOGGLE_CASE = new QuickAction(
@@ -74,6 +74,38 @@ public final class GboardLongPressQuickActions1803Policy {
         return action != null && contains(existingCodes, action.actionCode);
     }
 
+    public static GboardEditingShortcutPolicy.Shortcut shortcutForChord(
+            int keyId, String pressText, int selectedCode, int flowModeTypingPulseCode,
+            int plainTextCode) {
+        QuickAction action = resolve(keyId, pressText);
+        if (action == null) {
+            return null;
+        }
+        GboardEditingShortcutPolicy.Shortcut latinCarrier =
+                GboardEditingShortcutPolicy.resolveLatinChord(
+                        pressText, selectedCode, flowModeTypingPulseCode);
+        return selectedCode == action.actionCode
+                || selectedCode == plainTextCode
+                || latinCarrier == action.shortcut
+                ? action.shortcut : null;
+    }
+
+    public static GboardEditingShortcutPolicy.Shortcut shortcutForPointerTarget(
+            int keyId, String pressText, int pressCarrierCode,
+            int flowModeTypingPulseCode) {
+        QuickAction action = resolve(keyId, pressText);
+        if (action == null) {
+            return null;
+        }
+        return GboardEditingShortcutPolicy.resolveLatinChord(
+                pressText, pressCarrierCode, flowModeTypingPulseCode) == action.shortcut
+                ? action.shortcut : null;
+    }
+
+    public static boolean isZhuyinKeyId(int keyId) {
+        return keyId >= 0x7f0b295e && keyId <= 0x7f0b298a;
+    }
+
     private static QuickAction resolve(int keyId, String pressText) {
         if (keyId == 0x7f0b1aba || keyId == 0x7f0b18e4 || keyId == 0x7f0b19db) {
             return TOGGLE_CASE;
@@ -123,7 +155,27 @@ public final class GboardLongPressQuickActions1803Policy {
         public final int iconResId;
         public final String debugName;
         public final int contextMenuActionId;
+        public final int actionCode;
+        public final int iconResId;
+        public final String debugName;
+        public final int contextMenuActionId;
+        public final GboardEditingShortcutPolicy.Shortcut shortcut;
+        public final boolean dispatchThroughInputConnection;
+
         public String label;
+
+        private QuickAction(int actionCode, int iconResId,
+                GboardEditingShortcutPolicy.Shortcut shortcut,
+                boolean dispatchThroughInputConnection) {
+            this.actionCode = actionCode;
+            this.iconResId = iconResId;
+            this.shortcut = shortcut;
+            this.debugName = shortcut != null ? shortcut.debugName : null;
+            this.dispatchThroughInputConnection = dispatchThroughInputConnection;
+            this.contextMenuActionId = dispatchThroughInputConnection
+                    ? shortcut.contextMenuActionId : 0;
+            this.label = null;
+        }
 
         public QuickAction(int actionCode, int iconResId, String debugName,
                 int contextMenuActionId) {
@@ -136,6 +188,8 @@ public final class GboardLongPressQuickActions1803Policy {
             this.iconResId = iconResId;
             this.debugName = debugName;
             this.contextMenuActionId = contextMenuActionId;
+            this.shortcut = null;
+            this.dispatchThroughInputConnection = false;
             this.label = label;
         }
     }
