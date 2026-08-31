@@ -208,7 +208,7 @@ public final class GboardLongPressQuickActions1803ReflectionHandles {
         actionBuilderEntriesField.set(actionBuilder, updatedEntries);
 
         String[] labels = normalizeLabels(existingLabels, existingEntries.length + 1);
-        labels[existingEntries.length] = null;
+        labels[existingEntries.length] = action.label;
         actionBuilderLabelsField.set(actionBuilder, labels);
 
         int[] icons = normalizeIcons(existingIcons, existingEntries.length + 1);

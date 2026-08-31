@@ -249,6 +249,53 @@ public final class GboardTopRowSwipeRuntime {
         }
     }
 
+    public static void triggerSlotExecution(InputMethodService service, int slotIndex) {
+        Log.i(TAG, "triggerSlotExecution called for slot " + slotIndex);
+        if (service == null || slotIndex < 0 || slotIndex >= GboardTopRowSwipeSettings.SLOT_COUNT) {
+            return;
+        }
+        try {
+            SettingsSnapshot snapshot = settingsSnapshot(service);
+            TopRowItem item = customTopRowItem(snapshot, slotIndex);
+            if (item == null) {
+                return;
+            }
+            
+            if (item.isJavaScript) {
+                Log.i(TAG, "Executing JS for slot " + slotIndex);
+                android.view.inputmethod.InputConnection ic = service.getCurrentInputConnection();
+                String scriptInput = GboardQuickJsFeature.selectedInputText(ic);
+                QuickJsSlotConfig config = new QuickJsSlotConfig(TopRowLayoutKind.ENGLISH_QWERTY, slotIndex, item.scriptText, item.timeoutMs);
+                GboardQuickJsFeature.executeSlotScript(
+                        null, 
+                        service, 
+                        ic, 
+                        new GboardQuickJsFeature.QuickJsSlotKey(TopRowLayoutKind.ENGLISH_QWERTY, slotIndex),
+                        config, 
+                        scriptInput, 
+                        globalJavaScript(service),
+                        snapshot.javaScriptRuntimeLimits);
+            } else if (item.commitText != null) {
+                Log.i(TAG, "Committing text for slot " + slotIndex + ": " + item.commitText);
+                android.view.inputmethod.InputConnection ic = service.getCurrentInputConnection();
+                if (ic != null) {
+                    ic.commitText(item.commitText, 1);
+                }
+            }
+        } catch (Throwable throwable) {
+            Log.e(TAG, "Slot execution failed", throwable);
+        }
+    }
+
+    public static String getSlotLabel(Context context, int slotIndex) {
+        if (context == null || slotIndex < 0 || slotIndex >= GboardTopRowSwipeSettings.SLOT_COUNT) {
+            return null;
+        }
+        SettingsSnapshot snapshot = settingsSnapshot(context);
+        TopRowItem item = customTopRowItem(snapshot, slotIndex);
+        return item != null ? item.label : null;
+    }
+
     public static void triggerManualRowSwitch(InputMethodService service) {
         Log.i(TAG, "triggerManualRowSwitch called");
         if (service == null) {

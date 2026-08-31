@@ -17,6 +17,14 @@ public final class GboardLongPressQuickActions1803Policy {
             -0x27f0, 0x7f08022a, "Switch top row", 0);
     private static final QuickAction TOGGLE_CASE = new QuickAction(
             -0x27f1, 0x7f0803c0, "Toggle case", 0);
+    public static final QuickAction SLOT_0 = new QuickAction(
+            -0x27f2, 0x7f0803c0, "Slot 1", 0);
+    public static final QuickAction SLOT_1 = new QuickAction(
+            -0x27f3, 0x7f0803c0, "Slot 2", 0);
+    public static final QuickAction SLOT_2 = new QuickAction(
+            -0x27f4, 0x7f0803c0, "Slot 3", 0);
+    public static final QuickAction SLOT_3 = new QuickAction(
+            -0x27f5, 0x7f0803c0, "Slot 4", 0);
 
     private GboardLongPressQuickActions1803Policy() {
     }
@@ -50,6 +58,16 @@ public final class GboardLongPressQuickActions1803Policy {
         return action != null && action.actionCode == selectedCode;
     }
 
+    public static QuickAction getSlotAction(int index) {
+        return switch (index) {
+            case 0 -> SLOT_0;
+            case 1 -> SLOT_1;
+            case 2 -> SLOT_2;
+            case 3 -> SLOT_3;
+            default -> null;
+        };
+    }
+
     public static boolean containsAssignedAction(int keyId, String pressText,
             int[] existingCodes) {
         QuickAction action = resolve(keyId, pressText);
@@ -64,8 +82,6 @@ public final class GboardLongPressQuickActions1803Policy {
             return null;
         }
         return switch (keyId) {
-            case 0x7f0b1a4a -> "q".equals(pressText) ? SWITCH_TOP_ROW : null;
-            case 0x7f0b1933 -> "Q".equals(pressText) ? SWITCH_TOP_ROW : null;
             case 0x7f0b19c2 -> "g".equals(pressText) ? TOGGLE_CASE : null;
             case 0x7f0b18db -> "G".equals(pressText) ? TOGGLE_CASE : null;
             case 0x7f0b1990 -> "a".equals(pressText) ? SELECT_ALL : null;
@@ -107,13 +123,20 @@ public final class GboardLongPressQuickActions1803Policy {
         public final int iconResId;
         public final String debugName;
         public final int contextMenuActionId;
+        public String label;
 
-        private QuickAction(int actionCode, int iconResId, String debugName,
+        public QuickAction(int actionCode, int iconResId, String debugName,
                 int contextMenuActionId) {
+            this(actionCode, iconResId, debugName, contextMenuActionId, null);
+        }
+
+        public QuickAction(int actionCode, int iconResId, String debugName,
+                int contextMenuActionId, String label) {
             this.actionCode = actionCode;
             this.iconResId = iconResId;
             this.debugName = debugName;
             this.contextMenuActionId = contextMenuActionId;
+            this.label = label;
         }
     }
 }

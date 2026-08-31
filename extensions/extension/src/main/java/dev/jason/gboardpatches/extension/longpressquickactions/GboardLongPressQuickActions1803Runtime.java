@@ -80,11 +80,52 @@ public final class GboardLongPressQuickActions1803Runtime {
                                 handles.extractKeyId(identityMetadata),
                                 handles.extractPressText(identityMetadata),
                                 handles.extractLongPressCodes(metadata));
+                
+                Object currentMetadata = metadata;
+                
+                // Detection for Top Row slots 1-4 (Q, W, E, R)
+                String pressText = handles.extractPressText(identityMetadata);
+                int topRowIndex = -1;
+                if (pressText != null && pressText.length() == 1) {
+                    char c = Character.toLowerCase(pressText.charAt(0));
+                    if (c == 'q') topRowIndex = 0;
+                    else if (c == 'w') topRowIndex = 1;
+                    else if (c == 'e') topRowIndex = 2;
+                    else if (c == 'r') topRowIndex = 3;
+                }
+
+                if (topRowIndex != -1) {
+                    // Q (index 0) gets Switch Top Row button
+                    if (topRowIndex == 0) {
+                        GboardLongPressQuickActions1803Policy.QuickAction switchAction = 
+                            new GboardLongPressQuickActions1803Policy.QuickAction(-0x27f0, 0x7f08022a, "Switch top row", 0);
+                        currentMetadata = handles.appendLongPressAction(context, currentMetadata, switchAction);
+                    }
+                    
+                    // All 1-4 get their corresponding Slot action
+                    GboardLongPressQuickActions1803Policy.QuickAction slotAction = 
+                        GboardLongPressQuickActions1803Policy.getSlotAction(topRowIndex);
+                    
+                    if (slotAction != null) {
+                        String slotLabel = dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime.getSlotLabel(context, topRowIndex);
+                        if (slotLabel == null || slotLabel.isEmpty()) {
+                            slotLabel = "J" + (topRowIndex + 1);
+                        }
+                        slotAction.label = slotLabel;
+                        currentMetadata = handles.appendLongPressAction(context, currentMetadata, slotAction);
+                    }
+                    
+                    // We don't want standard Policy actions for these keys if we've handled them
+                    rememberPatchedMetadata(metadata, currentMetadata);
+                    return currentMetadata;
+                }
+
                 if (action == null) {
                     UNPATCHED_METADATA_MARKERS.put(metadata, Boolean.TRUE);
                     return metadata;
                 }
-                Object patched = handles.appendLongPressAction(context, metadata, action);
+                
+                Object patched = handles.appendLongPressAction(context, currentMetadata, action);
                 if (patched == null) {
                     UNPATCHED_METADATA_MARKERS.put(metadata, Boolean.TRUE);
                     return metadata;
@@ -118,9 +159,27 @@ public final class GboardLongPressQuickActions1803Runtime {
             int keyId = handles.extractKeyId(identityMetadata);
             String pressText = handles.extractPressText(identityMetadata);
             int selectedCode = handles.extractSelectedEventCode(event);
+            Log.i(TAG, LOG_PREFIX + "Handling input event, selectedCode=" + selectedCode + " (0x" + Integer.toHexString(selectedCode) + ")");
+            
             boolean enabled = GboardLongPressQuickActionsRuntimeSettings.isEnabled();
             boolean quickActionEvent = GboardLongPressQuickActions1803Policy
                     .isQuickActionEvent(keyId, pressText, actionTypeName, selectedCode);
+            
+            // Check for our custom codes even if Policy didn't plan them via hardcoded IDs
+            if (selectedCode == -0x27f0) { // SWITCH_TOP_ROW
+                Log.i(TAG, LOG_PREFIX + "Triggering manual row switch via code -0x27f0");
+                dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime
+                        .triggerManualRowSwitch(service);
+                return true;
+            }
+            if (selectedCode >= -0x27f5 && selectedCode <= -0x27f2) { // SLOTS 0-3
+                int slotIndex = -0x27f2 - selectedCode;
+                Log.i(TAG, LOG_PREFIX + "Triggering slot " + slotIndex + " via code " + selectedCode);
+                dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime
+                        .triggerSlotExecution(service, slotIndex);
+                return true;
+            }
+
             if (shouldConsumeDisabledInjectedEvent(enabled, metadata, quickActionEvent)) {
                 logInfo(ACTION_LOG_COUNT, 30, "suppressed disabled injected action");
                 return true;
@@ -132,12 +191,6 @@ public final class GboardLongPressQuickActions1803Runtime {
                     GboardLongPressQuickActions1803Policy.contextMenuActionFor(
                             keyId, pressText, actionTypeName, selectedCode);
             if (contextMenuAction == null) {
-                if (selectedCode == -0x27f0) { // SWITCH_TOP_ROW
-                    Log.i(TAG, LOG_PREFIX + "Triggering manual row switch via code -0x27f0");
-                    dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime
-                            .triggerManualRowSwitch(service);
-                    return true;
-                }
                 if (selectedCode == -0x27f1) { // TOGGLE_CASE
                     return attemptToggleCaseAction(service.getCurrentInputConnection());
                 }
