@@ -1,5 +1,5 @@
 {
-  "version": "3.7.0",
+  "version": "3.11.0",
   "patches": [
     {
       "name": "AI Writing Tools",
@@ -40,6 +40,18 @@
     {
       "name": "Advanced Voice Typing",
       "description": "啟用進階語音輸入（包含自動標點功能），並另外為不支援進階語音輸入的繁體中文語音啟用自動標點\nEnable Advanced Voice Typing with automatic punctuation, and separately enable automatic punctuation for Traditional Chinese voice typing, which does not support Advanced Voice Typing.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.0.3.954559732-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
+      "name": "Backup & Restore",
+      "description": "匯出或還原全部 Patches 設定，並備份、比較及還原 Gboard PB/XML flag store\nExport or restore all Patches settings, and back up, compare, or restore the Gboard PB/XML flag store.",
       "use": true,
       "dependencies": [],
       "compatiblePackages": {
@@ -100,6 +112,18 @@
     {
       "name": "Custom Symbols",
       "description": "新增獨立的特殊符號分頁，長按逗號->愛心\nAdd a dedicated custom symbols tab and replace the long-press comma entry with a heart shortcut.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.0.3.954559732-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
+      "name": "Custom Theme",
+      "description": "支援匯入自訂 ZIP 主題，並支援從 Rboard 官方儲存庫匯入精美主題。\nImport custom ZIP themes and beautiful themes from the official Rboard repository.",
       "use": true,
       "dependencies": [],
       "compatiblePackages": {
@@ -196,6 +220,18 @@
     {
       "name": "English QWERTY Up-Flick Uppercase",
       "description": "英文 QWERTY 鍵盤上滑大小寫\nFlick up on the English QWERTY keyboard to toggle uppercase and lowercase.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.0.3.954559732-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
+      "name": "FTP Server",
+      "description": "新增區域網路 FTP 伺服器，支援檔案瀏覽、傳輸與下載續傳\nAdd a LAN FTP server with file browsing, transfers, and download resume.",
       "use": true,
       "dependencies": [],
       "compatiblePackages": {
@@ -378,8 +414,32 @@
       "options": []
     },
     {
+      "name": "Simple Calculator",
+      "description": "直接輸入算式，在 Gboard 推薦列顯示可捲動算式與答案。\nType an expression and show a scrollable equation plus its answer in Gboard's suggestion row.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.0.3.954559732-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
       "name": "Swipeable Custom Top Row",
       "description": "滑動鍵盤第一排，在原生列與可自訂文字/JavaScript 列之間切換\nSwipe the keyboard top row to switch between the stock row and a customizable text/JavaScript row.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.0.3.954559732-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
+      "name": "Toolbar Editing Buttons",
+      "description": "將全選、複製、剪下與貼上加入選單。\nAdd Select All, Copy, Cut and Paste to the menu.",
       "use": true,
       "dependencies": [],
       "compatiblePackages": {

@@ -1,3 +1,127 @@
+## [3.11.0](https://github.com/jasonwu1994/Gboard-patches/compare/v3.10.0...v3.11.0) (2026-09-22)
+
+### ✨ New Features
+
+* **Gboard:** add the `Toolbar Editing Buttons` patch, which adds Select all, Copy, Cut, and Paste actions to the toolbar menu.
+* **Gboard:** add the `Custom Theme` patch, supporting custom ZIP theme imports and a selection of beautiful themes from Rboard's official repository.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix an issue where `Custom Symbols` history entries were incorrectly saved to `Emoticon` history.
+
+### ✨ 新功能
+
+* **Gboard:** 新增 `Toolbar Editing Buttons` Patch，將「全選」、「複製」、「剪下」與「貼上」操作加入工具列選單。
+* **Gboard:** 新增 `Custom Theme` Patch，支援匯入自訂 ZIP 主題，也能從 Rboard 官方儲存庫匯入精美主題。
+
+### 🐛 修復
+
+* **Gboard:** 修復 `Custom Symbols` 歷史記錄誤寫入 `Emoticon` 歷史記錄的問題。
+
+## [3.11.0-dev.3](https://github.com/jasonwu1994/Gboard-patches/compare/v3.11.0-dev.2...v3.11.0-dev.3) (2026-09-20)
+
+### ✨ New Features
+
+* **Gboard:** add the `Toolbar Editing Buttons` patch, which adds Select all, Copy, Cut, and Paste actions to the toolbar menu.
+
+### ✨ 新功能
+
+* **Gboard:** 新增 `Toolbar Editing Buttons` Patch，將「全選」、「複製」、「剪下」與「貼上」操作加入工具列選單。
+
+## [3.11.0-dev.2](https://github.com/jasonwu1994/Gboard-patches/compare/v3.10.0...v3.11.0-dev.2) (2026-09-18)
+
+### ✨ New Features
+
+* **Gboard:** add the `Custom Theme` patch, supporting custom ZIP theme imports and a selection of beautiful themes from Rboard's official repository.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix an issue where `Custom Symbols` history entries were incorrectly saved to `Emoticon` history.
+
+### ✨ 新功能
+
+* **Gboard:** 新增 `Custom Theme` Patch，支援匯入自訂 ZIP 主題，也能從 Rboard 官方儲存庫匯入精美主題。
+
+### 🐛 修復
+
+* **Gboard:** 修復 `Custom Symbols` 歷史記錄誤寫入 `Emoticon` 歷史記錄的問題。
+
+## [3.10.0](https://github.com/jasonwu1994/Gboard-patches/compare/v3.9.0...v3.10.0) (2026-09-02)
+
+### ✨ New Features
+
+* **Gboard:** add the `Backup & Restore` patch for exporting and restoring all patch settings, and for backing up, comparing, and restoring Gboard's PB/XML flag stores.
+
+### ✨ 新功能
+
+* **Gboard:** 新增 `Backup & Restore` Patch，可匯出與還原所有 Patch 設定，並支援備份、比較及還原 Gboard 的 PB/XML flag store。
+
+## [3.10.0-dev.3](https://github.com/jasonwu1994/Gboard-patches/compare/v3.9.0...v3.10.0-dev.3) (2026-09-01)
+
+### ✨ New Features
+
+* **Gboard:** add the `Backup & Restore` patch for exporting and restoring all patch settings, and for backing up, comparing, and restoring Gboard's PB/XML flag stores.
+
+### ✨ 新功能
+
+* **Gboard:** 新增 `Backup & Restore` Patch，可匯出與還原所有 Patch 設定，並支援備份、比較及還原 Gboard 的 PB/XML flag store。
+
+## [3.9.0](https://github.com/jasonwu1994/Gboard-patches/compare/v3.8.0...v3.9.0) (2026-09-01)
+
+### ✨ New Features
+
+* **Gboard:** add the `Simple Calculator` patch. Enter an expression directly to display both the expression and its result in Gboard's suggestion strip.
+
+### ✨ 新功能
+
+* **Gboard:** 新增 `Simple Calculator` Patch；直接輸入算式，即可在 Gboard 推薦列顯示算式與計算結果。
+
+## [3.9.0-dev.1](https://github.com/jasonwu1994/Gboard-patches/compare/v3.8.0...v3.9.0-dev.1) (2026-09-01)
+
+### ✨ New Features
+
+* **Gboard:** add the `Simple Calculator` patch. Enter an expression directly to display both the expression and its result in Gboard's suggestion strip.
+
+### ✨ 新功能
+
+* **Gboard:** 新增 `Simple Calculator` Patch；直接輸入算式，即可在 Gboard 推薦列顯示算式與計算結果。
+
+## [3.8.0](https://github.com/jasonwu1994/Gboard-patches/compare/v3.7.0...v3.8.0) (2026-08-31)
+
+### ✨ New Features
+
+* **Gboard:** add the `FTP Server` patch, providing a LAN FTP server for browsing and transferring files with resume support. Why would a keyboard app need an FTP server? You're right—it doesn't, but I do 😂
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix an issue in the `Long-Press Editing Shortcuts` patch that could occasionally enter unintended text when switching languages.
+
+### ✨ 新功能
+
+* **Gboard:** 新增 `FTP Server` Patch，提供區域網路 FTP 伺服器，支援檔案瀏覽、傳輸與續傳。為什麼鍵盤 App 會需要 FTP 伺服器？沒錯，鍵盤不需要，但我需要 😂
+
+### 🐛 修復
+
+* **Gboard:** 修復 `Long-Press Editing Shortcuts` Patch 在某些情況下切換語言時會意外輸入文字的問題。
+
+## [3.8.0-dev.3](https://github.com/jasonwu1994/Gboard-patches/compare/v3.7.0...v3.8.0-dev.3) (2026-08-31)
+
+### ✨ New Features
+
+* **Gboard:** add the `FTP Server` patch, providing a LAN FTP server for browsing and transferring files with resume support. Why would a keyboard app need an FTP server? You're right—it doesn't, but I do 😂
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix an issue in the `Long-Press Editing Shortcuts` patch that could occasionally enter unintended text when switching languages.
+
+### ✨ 新功能
+
+* **Gboard:** 新增 `FTP Server` Patch，提供區域網路 FTP 伺服器，支援檔案瀏覽、傳輸與續傳。為什麼鍵盤 App 會需要 FTP 伺服器？沒錯，鍵盤不需要，但我需要 😂
+
+### 🐛 修復
+
+* **Gboard:** 修復 `Long-Press Editing Shortcuts` Patch 在某些情況下切換語言時會意外輸入文字的問題。
+
 ## [3.7.0](https://github.com/jasonwu1994/Gboard-patches/compare/v3.6.0...v3.7.0) (2026-08-30)
 
 ### ✨ New Features

@@ -1,6 +1,10 @@
+import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.util.Base64
+import java.util.Properties
+import java.util.zip.ZipFile
 import javax.xml.parsers.DocumentBuilderFactory
+import groovy.json.JsonSlurper
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 
@@ -66,6 +70,21 @@ val generatedSettingsTextResDir = layout.buildDirectory.dir(
 val generatedSettingsTextJavaDir = layout.buildDirectory.dir(
     "generated/source/settingsText/java"
 )
+val generatedLanFtpMessagesJavaDir = layout.buildDirectory.dir(
+    "generated/source/lanFtpMessages/java"
+)
+val generatedCustomThemeBindingsJavaDir = layout.buildDirectory.dir(
+    "generated/source/customThemeBindings/java"
+)
+val customThemeBindingsOverride = providers.gradleProperty("gboardReviewedBindingsFile")
+val customThemeBindingsAuthority = objects.fileProperty().apply {
+    set(rootProject.layout.projectDirectory.file(
+        "patches/src/main/resources/gboard/gboard-version-bindings.json"
+    ))
+    if (customThemeBindingsOverride.isPresent) {
+        set(layout.file(customThemeBindingsOverride.map { path -> file(path) }))
+    }
+}
 
 android {
     namespace = "dev.jason.gboardpatches.extension"
@@ -88,11 +107,15 @@ android {
     sourceSets.named("main") {
         java.directories.add(generatedQuickJsPayloadDir.get().asFile.absolutePath)
         java.directories.add(generatedSettingsTextJavaDir.get().asFile.absolutePath)
+        java.directories.add(generatedLanFtpMessagesJavaDir.get().asFile.absolutePath)
+        java.directories.add(generatedCustomThemeBindingsJavaDir.get().asFile.absolutePath)
         res.directories.add(generatedSettingsTextResDir.get().asFile.absolutePath)
     }
 }
 
 dependencies {
+    implementation(libs.apache.ftpserver.core)
+    implementation(libs.apache.mina.core)
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.14.1")
 }
@@ -341,9 +364,253 @@ val generateSettingsText = tasks.register("generateSettingsText") {
     }
 }
 
+val generateLanFtpMessageResource = tasks.register("generateLanFtpMessageResource") {
+    val runtimeClasspath = configurations.named("releaseRuntimeClasspath")
+    val outputFile = generatedLanFtpMessagesJavaDir.map { directory ->
+        directory.file(
+            "dev/jason/gboardpatches/extension/lanftp/runtime/LanFtpMessageResource.java"
+        )
+    }
+    inputs.files(runtimeClasspath)
+    outputs.file(outputFile)
+
+    doLast {
+        val ftpServerJar = runtimeClasspath.get().files.singleOrNull { file ->
+            file.name.startsWith("ftpserver-core-") && file.extension == "jar"
+        } ?: throw GradleException("Apache FTPServer core dependency was not resolved exactly once")
+        val messages = Properties()
+        ZipFile(ftpServerJar).use { archive ->
+            val entry = archive.getEntry("org/apache/ftpserver/message/FtpStatus.properties")
+                ?: throw GradleException("Apache FTPServer status messages are missing")
+            archive.getInputStream(entry).use(messages::load)
+        }
+        val renderedMessages = messages.stringPropertyNames().sorted().joinToString("\n") { key ->
+            val value = messages.getProperty(key)
+            "        messages.put(\"${escapeJavaString(key)}\", " +
+                "\"${escapeJavaString(value)}\");"
+        }
+        val output = outputFile.get().asFile
+        output.parentFile.mkdirs()
+        output.writeText(
+            """
+            package dev.jason.gboardpatches.extension.lanftp.runtime;
+
+            import java.util.Collections;
+            import java.util.HashMap;
+            import java.util.List;
+            import java.util.Map;
+
+            import org.apache.ftpserver.message.MessageResource;
+
+            /** Message table embedded in dex because Morphe extensions carry classes, not JAR resources. */
+            public final class LanFtpMessageResource implements MessageResource {
+                private static final Map<String, String> MESSAGES = createMessages();
+
+                private LanFtpMessageResource() {
+                }
+
+                public static MessageResource create() {
+                    return new LanFtpMessageResource();
+                }
+
+                @Override
+                public List<String> getAvailableLanguages() {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public String getMessage(int code, String subId, String language) {
+                    String key = Integer.toString(code);
+                    if (subId != null) {
+                        String specific = MESSAGES.get(key + "." + subId);
+                        if (specific != null) {
+                            return specific;
+                        }
+                    }
+                    return MESSAGES.get(key);
+                }
+
+                @Override
+                public Map<String, String> getMessages(String language) {
+                    return MESSAGES;
+                }
+
+                private static Map<String, String> createMessages() {
+                    Map<String, String> messages = new HashMap<String, String>();
+$renderedMessages
+                    return Collections.unmodifiableMap(messages);
+                }
+            }
+            """.trimIndent()
+        )
+    }
+}
+
+val generateCustomThemeVersionBindings = tasks.register("generateCustomThemeVersionBindings") {
+    val outputFile = generatedCustomThemeBindingsJavaDir.map { directory ->
+        directory.file(
+            "dev/jason/gboardpatches/extension/customtheme/" +
+                "GboardCustomThemeVersionBindings.java"
+        )
+    }
+    inputs.file(customThemeBindingsAuthority)
+    outputs.file(outputFile)
+
+    doLast {
+        val authority = customThemeBindingsAuthority.get().asFile
+        @Suppress("UNCHECKED_CAST")
+        val profile = JsonSlurper().parse(authority) as Map<String, Any>
+        @Suppress("UNCHECKED_CAST")
+        val bindings = profile.getValue("bindings") as Map<String, Map<String, Any>>
+
+        fun binding(name: String, kind: String): Map<String, Any> =
+            bindings[name]?.also { value ->
+                require(value["kind"] == kind) { "$name must be a $kind binding" }
+            } ?: throw GradleException("Missing Custom Theme binding: $name")
+
+        fun binaryClass(binding: Map<String, Any>): String {
+            val descriptor = binding.getValue("class_type") as String
+            require(descriptor.startsWith("L") && descriptor.endsWith(";")) {
+                "Invalid Custom Theme class descriptor: $descriptor"
+            }
+            return descriptor.substring(1, descriptor.length - 1).replace('/', '.')
+        }
+
+        fun javaString(value: String): String = value
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+
+        val plus = binding("custom_theme_plus_handler", "method")
+        @Suppress("UNCHECKED_CAST")
+        val plusParameters = plus.getValue("parameter_types") as List<String>
+        fun binaryDescriptor(descriptor: String): String {
+            require(descriptor.startsWith("L") && descriptor.endsWith(";")) {
+                "Invalid Custom Theme type descriptor: $descriptor"
+            }
+            return descriptor.substring(1, descriptor.length - 1).replace('/', '.')
+        }
+        val result = binding("custom_theme_result_handler", "method")
+        val fragmentPeer = binding("custom_theme_fragment_peer_field", "field")
+        val peerContext = binding("custom_theme_peer_context_field", "field")
+        val peerLauncher = binding("custom_theme_peer_launcher_field", "field")
+        val peerResult = binding("custom_theme_peer_result_handler", "method")
+        val launcherLaunch = binding("custom_theme_launcher_launch", "method")
+        val validator = binding("custom_theme_validator", "method")
+        fun parameters(binding: Map<String, Any>): List<String> {
+            @Suppress("UNCHECKED_CAST")
+            return binding.getValue("parameter_types") as List<String>
+        }
+        require(plusParameters.size == 3 && plusParameters[2] == "I" &&
+            plus["return_type"] == "V") {
+            "Custom Theme plus binding has an unexpected method shape"
+        }
+        val peerDescriptor = plusParameters[0]
+        require(fragmentPeer["class_type"] == result["class_type"] &&
+            fragmentPeer["field_type"] == peerDescriptor) {
+            "Custom Theme fragment peer binding is inconsistent with the patched handlers"
+        }
+        require(listOf(peerContext, peerLauncher, peerResult).all {
+            it["class_type"] == peerDescriptor
+        }) {
+            "Custom Theme peer bindings must share the plus-handler peer type"
+        }
+        require(peerContext["field_type"] == "Landroid/content/Context;" &&
+            peerLauncher["field_type"] == launcherLaunch["class_type"] &&
+            parameters(peerResult) == listOf("Landroid/content/Intent;") &&
+            peerResult["return_type"] == "V") {
+            "Custom Theme peer runtime binding shape is inconsistent"
+        }
+        require(parameters(result) == listOf("I", "I", "Landroid/content/Intent;") &&
+            result["return_type"] == "V" &&
+            parameters(launcherLaunch) == listOf(
+                "Landroid/content/Intent;", "I", "Landroid/os/Bundle;"
+            ) && launcherLaunch["return_type"] == "V") {
+            "Custom Theme result or launcher binding has an unexpected method shape"
+        }
+        require(parameters(validator) == listOf("Ljava/io/File;") &&
+            validator["return_type"] == "Z") {
+            "Custom Theme validator binding has an unexpected method shape"
+        }
+        val output = outputFile.get().asFile
+        output.parentFile.mkdirs()
+        output.writeText(
+            """
+            package dev.jason.gboardpatches.extension.customtheme;
+
+            /** Generated from the reviewed Gboard target binding profile. */
+            final class GboardCustomThemeVersionBindings {
+                static final String TARGET_VERSION = "${javaString(profile.getValue("target_version") as String)}";
+                static final String PLUS_CLASS = "${javaString(binaryClass(plus))}";
+                static final String PLUS_METHOD = "${javaString(plus.getValue("method_name") as String)}";
+                static final String ADAPTER_CLASS = "${javaString(binaryDescriptor(plusParameters[1]))}";
+                static final String RESULT_CLASS = "${javaString(binaryClass(result))}";
+                static final String RESULT_METHOD = "${javaString(result.getValue("method_name") as String)}";
+                static final String FRAGMENT_PEER_FIELD = "${javaString(fragmentPeer.getValue("field_name") as String)}";
+                static final String PEER_CLASS = "${javaString(binaryClass(peerContext))}";
+                static final String PEER_CONTEXT_FIELD = "${javaString(peerContext.getValue("field_name") as String)}";
+                static final String PEER_LAUNCHER_FIELD = "${javaString(peerLauncher.getValue("field_name") as String)}";
+                static final String PEER_RESULT_METHOD = "${javaString(peerResult.getValue("method_name") as String)}";
+                static final String LAUNCHER_CLASS = "${javaString(binaryClass(launcherLaunch))}";
+                static final String LAUNCHER_METHOD = "${javaString(launcherLaunch.getValue("method_name") as String)}";
+                static final String VALIDATOR_CLASS = "${javaString(binaryClass(validator))}";
+                static final String VALIDATOR_METHOD = "${javaString(validator.getValue("method_name") as String)}";
+
+                private GboardCustomThemeVersionBindings() {
+                }
+            }
+            """.trimIndent()
+        )
+    }
+}
+
 tasks.named("preBuild") {
     dependsOn(generateQuickJsNativePayload)
     dependsOn(generateSettingsText)
+    dependsOn(generateLanFtpMessageResource)
+    dependsOn(generateCustomThemeVersionBindings)
+}
+
+tasks.named("syncExtension") {
+    doLast {
+        val extensionDex = layout.buildDirectory.file(
+            "morphe/extensions/gboard-patches.rve"
+        ).get().asFile
+        check(extensionDex.isFile) {
+            "Morphe extension dex was not generated: $extensionDex"
+        }
+        val dexText = String(extensionDex.readBytes(), StandardCharsets.ISO_8859_1)
+        val requiredLanFtpTypes = listOf(
+            "Ldev/jason/gboardpatches/extension/lanftp/android/LanFtpServerConfigSnapshot;",
+            "Ldev/jason/gboardpatches/extension/lanftp/android/LanFtpServerState;",
+            "Ldev/jason/gboardpatches/extension/lanftp/runtime/LanFtpServerConfig;",
+            "Ldev/jason/gboardpatches/extension/lanftp/runtime/LanFtpSessionInfo;",
+        )
+        requiredLanFtpTypes.forEach { descriptor ->
+            check(dexText.contains(descriptor)) {
+                "Morphe extension dex is missing required LAN FTP type: $descriptor"
+            }
+        }
+        check(!dexText.contains("Lcom/android/tools/r8/RecordTag;")) {
+            "Morphe extension dex contains record classes without the required D8 global synthetic"
+        }
+        val ftpServerJar = configurations.getByName("releaseRuntimeClasspath").files
+            .singleOrNull { file ->
+                file.name.startsWith("ftpserver-core-") && file.extension == "jar"
+            } ?: throw GradleException(
+                "Apache FTPServer core dependency was not resolved exactly once"
+            )
+        val messageOutput = layout.buildDirectory.file(
+            "morphe/lan-ftp-res/FtpStatus.properties"
+        ).get().asFile
+        messageOutput.parentFile.mkdirs()
+        ZipFile(ftpServerJar).use { archive ->
+            val entry = archive.getEntry("org/apache/ftpserver/message/FtpStatus.properties")
+                ?: throw GradleException("Apache FTPServer status messages are missing")
+            archive.getInputStream(entry).use { input ->
+                messageOutput.outputStream().use(input::copyTo)
+            }
+        }
+    }
 }
 
 tasks.register<Exec>("installExtension") {
