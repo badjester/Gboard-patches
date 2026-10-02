@@ -340,7 +340,6 @@ public final class GboardLongPressQuickActions1803Runtime {
             return Character.toUpperCase(text.charAt(0)) + text.substring(1);
         }
     }
-    }
 
     static void rememberPatchedMetadata(Object original, Object patched) {
         if (original == null || patched == null) {

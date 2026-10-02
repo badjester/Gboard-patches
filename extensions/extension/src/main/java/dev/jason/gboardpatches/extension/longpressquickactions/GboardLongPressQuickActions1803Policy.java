@@ -107,9 +107,7 @@ public final class GboardLongPressQuickActions1803Policy {
     }
 
     private static QuickAction resolve(int keyId, String pressText) {
-        if (keyId == 0x7f0b1aba || keyId == 0x7f0b18e4 || keyId == 0x7f0b19db) {
-            return TOGGLE_CASE;
-        }
+
         if (pressText == null) {
             return null;
         }
@@ -151,10 +149,6 @@ public final class GboardLongPressQuickActions1803Policy {
     }
 
     public static final class QuickAction {
-        public final int actionCode;
-        public final int iconResId;
-        public final String debugName;
-        public final int contextMenuActionId;
         public final int actionCode;
         public final int iconResId;
         public final String debugName;
