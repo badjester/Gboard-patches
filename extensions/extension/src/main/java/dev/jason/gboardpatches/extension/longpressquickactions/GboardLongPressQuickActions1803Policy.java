@@ -107,13 +107,19 @@ public final class GboardLongPressQuickActions1803Policy {
     }
 
     private static QuickAction resolve(int keyId, String pressText) {
-
+        if (keyId == 0x7f0b1aba || keyId == 0x7f0b19c1 || keyId == 0x7f0b1a4e
+                || keyId == 0x7f0b1a81 || keyId == 0x7f0b1aa2 || keyId == 0x7f0b19f0
+                || keyId == 0x7f0b1a2d || keyId == 0x7f0b1a43) {
+            return TOGGLE_CASE;
+        }
         if (pressText == null) {
             return null;
         }
         return switch (keyId) {
-            case 0x7f0b19c2 -> "g".equals(pressText) ? TOGGLE_CASE : null;
-            case 0x7f0b18db -> "G".equals(pressText) ? TOGGLE_CASE : null;
+            case 0x7f0b19c2 -> "g".equals(pressText) || "G".equals(pressText) ? TOGGLE_CASE : null;
+            case 0x7f0b18db -> "G".equals(pressText) || "g".equals(pressText) ? TOGGLE_CASE : null;
+            case 0x7f0b19db -> "g".equals(pressText) || "G".equals(pressText) ? TOGGLE_CASE : null;
+            case 0x7f0b18e4 -> "G".equals(pressText) || "g".equals(pressText) ? TOGGLE_CASE : null;
             case 0x7f0b1990 -> "a".equals(pressText) ? SELECT_ALL : null;
             case 0x7f0b18b2 -> "A".equals(pressText) ? SELECT_ALL : null;
             case 0x7f0b1ac9 -> "z".equals(pressText) ? UNDO : null;
