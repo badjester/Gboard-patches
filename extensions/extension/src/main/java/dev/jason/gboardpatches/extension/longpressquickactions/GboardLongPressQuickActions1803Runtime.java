@@ -121,22 +121,27 @@ public final class GboardLongPressQuickActions1803Runtime {
                     return currentMetadata;
                 }
 
-                if (action == null) {
-                    UNPATCHED_METADATA_MARKERS.put(metadata, Boolean.TRUE);
-                    return metadata;
+                if (shouldHaveToggleQuotes(identityMetadata, handles)) {
+                    GboardLongPressQuickActions1803Policy.QuickAction quotesAction =
+                            GboardLongPressQuickActions1803Policy.TOGGLE_QUOTES;
+                    Object quotesPatched = handles.appendLongPressAction(context, currentMetadata, quotesAction);
+                    if (quotesPatched != null) {
+                        currentMetadata = quotesPatched;
+                    }
                 }
-                
-                Object patched = handles.appendLongPressAction(context, currentMetadata, action);
-                if (patched == null) {
-                    UNPATCHED_METADATA_MARKERS.put(metadata, Boolean.TRUE);
-                    return metadata;
+
+                if (action != null) {
+                    Object actionPatched = handles.appendLongPressAction(context, currentMetadata, action);
+                    if (actionPatched != null) {
+                        currentMetadata = actionPatched;
+                    }
                 }
-                rememberPatchedMetadata(metadata, patched);
+
+                rememberPatchedMetadata(metadata, currentMetadata);
                 logInfo(PATCH_LOG_COUNT, 30,
-                        "appended keycode=" + action.actionCode
-                                + ", name=" + action.debugName
-                                + ", icon=0x" + Integer.toHexString(action.iconResId));
-                return patched;
+                        "patched longpress quick actions for keyId=0x"
+                                + Integer.toHexString(handles.extractKeyId(identityMetadata)));
+                return currentMetadata;
             }
         } catch (Throwable throwable) {
             markUnpatchedSafely(incomingMetadata);
@@ -197,6 +202,9 @@ public final class GboardLongPressQuickActions1803Runtime {
             if (contextMenuAction == null) {
                 if (selectedCode == -0x27f1) { // TOGGLE_CASE
                     return attemptToggleCaseAction(service.getCurrentInputConnection());
+                }
+                if (selectedCode == -0x27f6) { // TOGGLE_QUOTES
+                    return attemptToggleQuotesAction(service.getCurrentInputConnection());
                 }
                 return false;
             }
@@ -339,6 +347,111 @@ public final class GboardLongPressQuickActions1803Runtime {
         } else {
             return Character.toUpperCase(text.charAt(0)) + text.substring(1);
         }
+    }
+
+    private static boolean shouldHaveToggleQuotes(
+            Object metadata,
+            GboardLongPressQuickActions1803ReflectionHandles handles) {
+        try {
+            int keyId = handles.extractKeyId(metadata);
+            if (keyId == 0x7f0b1abf || keyId == 0x7f0b1964 || keyId == 0x7f0b2975) {
+                return true;
+            }
+            String pressText = handles.extractPressText(metadata);
+            if (pressText != null && pressText.length() == 1) {
+                char c = Character.toLowerCase(pressText.charAt(0));
+                return c == 'x' || c == '"' || c == '\'' || c == '”' || c == '“' || c == '„';
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    static boolean attemptToggleQuotesAction(InputConnection connection) {
+        if (connection == null) {
+            return false;
+        }
+        CharSequence selectedText = connection.getSelectedText(0);
+        if (selectedText != null && selectedText.length() > 0) {
+            String text = selectedText.toString();
+            int leadingLen = 0;
+            while (leadingLen < text.length()
+                    && Character.isWhitespace(text.charAt(leadingLen))) {
+                leadingLen++;
+            }
+            int trailingLen = 0;
+            while (trailingLen < (text.length() - leadingLen)
+                    && Character.isWhitespace(
+                            text.charAt(text.length() - 1 - trailingLen))) {
+                trailingLen++;
+            }
+
+            String leadingSpaces = text.substring(0, leadingLen);
+            String inner = text.substring(leadingLen, text.length() - trailingLen);
+            String trailingSpaces = text.substring(text.length() - trailingLen);
+
+            if (inner.isEmpty()) {
+                String quoted = "\"" + text + "\"";
+                connection.commitText(quoted, 1);
+                return true;
+            }
+
+            if (inner.length() >= 2 && isQuoteChar(inner.charAt(0))
+                    && isQuoteChar(inner.charAt(inner.length() - 1))) {
+                String unquoted = inner.substring(1, inner.length() - 1);
+                connection.commitText(leadingSpaces + unquoted + trailingSpaces, 1);
+            } else {
+                String quoted = "\"" + inner + "\"";
+                connection.commitText(leadingSpaces + quoted + trailingSpaces, 1);
+            }
+            return true;
+        }
+
+        CharSequence before = connection.getTextBeforeCursor(64, 0);
+        CharSequence after = connection.getTextAfterCursor(64, 0);
+
+        String beforeText = before != null ? before.toString() : "";
+        String afterText = after != null ? after.toString() : "";
+
+        if (beforeText.isEmpty() && afterText.isEmpty()) {
+            return false;
+        }
+
+        int startBefore = beforeText.length();
+        while (startBefore > 0 && !Character.isWhitespace(beforeText.charAt(startBefore - 1))) {
+            startBefore--;
+        }
+        String wordBefore = beforeText.substring(startBefore);
+
+        int endAfter = 0;
+        while (endAfter < afterText.length() && !Character.isWhitespace(afterText.charAt(endAfter))) {
+            endAfter++;
+        }
+        String wordAfter = afterText.substring(0, endAfter);
+
+        String fullWord = wordBefore + wordAfter;
+        if (fullWord.isEmpty()) {
+            return false;
+        }
+
+        connection.beginBatchEdit();
+        connection.deleteSurroundingText(beforeText.length() - startBefore, endAfter);
+
+        if (fullWord.length() >= 2 && isQuoteChar(fullWord.charAt(0))
+                && isQuoteChar(fullWord.charAt(fullWord.length() - 1))) {
+            String unquoted = fullWord.substring(1, fullWord.length() - 1);
+            connection.commitText(unquoted, 1);
+        } else {
+            String quoted = "\"" + fullWord + "\"";
+            connection.commitText(quoted, 1);
+        }
+        connection.endBatchEdit();
+        return true;
+    }
+
+    private static boolean isQuoteChar(char c) {
+        return c == '"' || c == '\'' || c == '“' || c == '”' || c == '„'
+                || c == '‘' || c == '’' || c == '«' || c == '»';
     }
 
     static void rememberPatchedMetadata(Object original, Object patched) {

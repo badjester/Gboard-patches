@@ -16,7 +16,9 @@ public final class GboardLongPressQuickActions1803Policy {
     private static final QuickAction SWITCH_TOP_ROW = new QuickAction(
             -0x27f0, 0x7f08022a, "Switch top row", 0);
     private static final QuickAction TOGGLE_CASE = new QuickAction(
-            -0x27f1, 0x7f0803c0, "Toggle case", 0);
+            -0x27f1, 0x7f0803c0, "Toggle case", 0, "Aa");
+    public static final QuickAction TOGGLE_QUOTES = new QuickAction(
+            -0x27f6, 0x7f0803c0, "Toggle quotes", 0, "“ ”");
     public static final QuickAction SLOT_0 = new QuickAction(
             -0x27f2, 0x7f0803c0, "Slot 1", 0);
     public static final QuickAction SLOT_1 = new QuickAction(
@@ -43,7 +45,7 @@ public final class GboardLongPressQuickActions1803Policy {
             return null;
         }
         QuickAction action = resolve(keyId, pressText);
-        if (action == null || action.contextMenuActionId == 0) {
+        if (action == null || action.actionCode != selectedCode || action.contextMenuActionId == 0) {
             return null;
         }
         return Integer.valueOf(action.contextMenuActionId);
@@ -53,6 +55,9 @@ public final class GboardLongPressQuickActions1803Policy {
             String actionTypeName, int selectedCode) {
         if (!"LONG_PRESS".equals(actionTypeName)) {
             return false;
+        }
+        if (selectedCode == -0x27f6) {
+            return true;
         }
         QuickAction action = resolve(keyId, pressText);
         return action != null && action.actionCode == selectedCode;
@@ -107,19 +112,19 @@ public final class GboardLongPressQuickActions1803Policy {
     }
 
     private static QuickAction resolve(int keyId, String pressText) {
-        if (keyId == 0x7f0b1aba || keyId == 0x7f0b19c1 || keyId == 0x7f0b1a4e
-                || keyId == 0x7f0b1a81 || keyId == 0x7f0b1aa2 || keyId == 0x7f0b19f0
-                || keyId == 0x7f0b1a2d || keyId == 0x7f0b1a43) {
+        if (keyId == 0x7f0b1aba) {
             return TOGGLE_CASE;
         }
         if (pressText == null) {
             return null;
         }
+        if ("\"".equals(pressText) || "'".equals(pressText)
+                || "”".equals(pressText) || "“".equals(pressText) || "„".equals(pressText)) {
+            return TOGGLE_QUOTES;
+        }
         return switch (keyId) {
-            case 0x7f0b19c2 -> "g".equals(pressText) || "G".equals(pressText) ? TOGGLE_CASE : null;
-            case 0x7f0b18db -> "G".equals(pressText) || "g".equals(pressText) ? TOGGLE_CASE : null;
-            case 0x7f0b19db -> "g".equals(pressText) || "G".equals(pressText) ? TOGGLE_CASE : null;
-            case 0x7f0b18e4 -> "G".equals(pressText) || "g".equals(pressText) ? TOGGLE_CASE : null;
+            case 0x7f0b19c2, 0x7f0b18db, 0x7f0b19db, 0x7f0b18e4 ->
+                "g".equalsIgnoreCase(pressText) ? TOGGLE_CASE : null;
             case 0x7f0b1990 -> "a".equals(pressText) ? SELECT_ALL : null;
             case 0x7f0b18b2 -> "A".equals(pressText) ? SELECT_ALL : null;
             case 0x7f0b1ac9 -> "z".equals(pressText) ? UNDO : null;
