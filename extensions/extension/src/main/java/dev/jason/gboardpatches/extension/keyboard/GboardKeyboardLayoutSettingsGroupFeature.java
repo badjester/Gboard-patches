@@ -13,6 +13,7 @@ import dev.jason.gboardpatches.extension.closeproactivesuggestions.GboardClosePr
 import dev.jason.gboardpatches.extension.customtheme.GboardCustomThemeSettingsFeature;
 import dev.jason.gboardpatches.extension.emojisize.GboardEmojiSizeSettingsFeature;
 import dev.jason.gboardpatches.extension.flowmode.GboardFlowModeSettingsFeature;
+import dev.jason.gboardpatches.extension.hapticprimitives.GboardHapticPrimitivesSettingsFeature;
 import dev.jason.gboardpatches.extension.roundedkeyboard.GboardRoundedKeyboardSettingsFeature;
 import dev.jason.gboardpatches.extension.settings.GboardFeatureGroup;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsContract;
@@ -48,6 +49,7 @@ public final class GboardKeyboardLayoutSettingsGroupFeature
                         new GboardZhuyinBottomRowWeightSettingsFeature(context),
                         new GboardSymbolFooterOrderSettingsFeature(context),
                         new GboardEmojiSizeSettingsFeature(context),
+                        new GboardHapticPrimitivesSettingsFeature(context),
                         new GboardAccessPointsMenuSettingsFeature(context),
                         new GboardSplitKeyboardSettingsFeature(context),
                         new GboardAccessibilityLayoutSettingsFeature(context),

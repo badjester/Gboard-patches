@@ -113,6 +113,11 @@ internal enum class GboardFlagFamilyFeature(
         RuntimeCallId.ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE,
         GboardFlagFamilyArgumentShape.FLAG_NAME_AND_RESULT,
     ),
+    MODERN_KEYPRESS_HAPTICS(
+        1400,
+        RuntimeCallId.HAPTIC_PRIMITIVES_RUNTIME_APPLY_FLAG_VALUE,
+        GboardFlagFamilyArgumentShape.FLAG_NAME_AND_RESULT,
+    ),
     ;
 
     val spec: GboardFlagFamilyFeatureSpec
@@ -602,6 +607,10 @@ private fun emitFlagFamilyRuntimeCall(call: RuntimeCallId, registers: String): S
         RuntimeCallId.QUICK_INSERT_RUNTIME_APPLY_FLAG_VALUE,
         registers,
     )
+    RuntimeCallId.HAPTIC_PRIMITIVES_RUNTIME_APPLY_FLAG_VALUE -> RuntimeCallEmitter.invoke(
+        RuntimeCallId.HAPTIC_PRIMITIVES_RUNTIME_APPLY_FLAG_VALUE,
+        registers,
+    )
     else -> error("Runtime call $call does not belong to the flag family")
 }
 
@@ -635,4 +644,5 @@ private val ALL_FLAG_FAMILY_RUNTIME_CALLS: Set<RuntimeCallId> = setOf(
     RuntimeCallId.KEY_SHAPE_SELECTION_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.OCR_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.QUICK_INSERT_RUNTIME_APPLY_FLAG_VALUE,
+    RuntimeCallId.HAPTIC_PRIMITIVES_RUNTIME_APPLY_FLAG_VALUE,
 )

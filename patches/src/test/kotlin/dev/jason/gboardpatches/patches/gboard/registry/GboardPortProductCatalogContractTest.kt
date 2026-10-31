@@ -13,6 +13,7 @@ import dev.jason.gboardpatches.patches.gboard.features.clipboardcontentlimit.gbo
 import dev.jason.gboardpatches.patches.gboard.features.closeproactivesuggestions.gboardCloseProactiveSuggestionsFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.features.cursortrackpad.gboardCursorTrackpadFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.features.emojisize.gboardEmojiSizeFlagValuePatch
+import dev.jason.gboardpatches.patches.gboard.features.hapticprimitives.gboardHapticPrimitivesFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.features.englishqwerty.gboardEnglishQwertySoftKeyPatch
 import dev.jason.gboardpatches.patches.gboard.features.featureflags.gboardDeviceIntelligenceFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.features.featureflags.gboardGrammarCheckerFlagValuePatch
@@ -197,7 +198,7 @@ class GboardPortProductCatalogContractTest {
     }
 
     @Test
-    fun flagFamilyDeclaresSeventeenSelectedOnlyComposerCallsInCanonicalOrder() {
+    fun flagFamilyDeclaresEighteenSelectedOnlyComposerCallsInCanonicalOrder() {
         val flagContributions = features().flatMap { feature ->
             feature.getAsJsonArray("contributions")
                 .map { contribution -> contribution.asJsonObject }
@@ -207,18 +208,18 @@ class GboardPortProductCatalogContractTest {
                 .map { contribution -> feature["feature_id"].asString to contribution }
         }.sortedBy { (_, contribution) -> contribution["order"].asInt }
 
-        assertEquals(17, flagContributions.size)
+        assertEquals(18, flagContributions.size)
         assertEquals(
             listOf(
                 10, 20, 30, 40, 100, 200, 300, 400,
-                500, 600, 700, 800, 900, 1000, 1100, 1200, 1300,
+                500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400,
             ),
             flagContributions.map { (_, contribution) -> contribution["order"].asInt },
         )
         val runtimeCalls = flagContributions.map { (_, contribution) ->
             contribution.getAsJsonArray("runtime_calls").first().asString
         }
-        assertEquals(17, runtimeCalls.distinct().size)
+        assertEquals(18, runtimeCalls.distinct().size)
         assertFalse("FEATURE_FLAGS_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE" in runtimeCalls)
         flagContributions.forEach { (_, contribution) ->
             assertEquals(
@@ -686,6 +687,7 @@ class GboardPortProductCatalogContractTest {
             "long_press_editing_shortcuts" to "version-sensitive",
             "package_rename" to "generic",
             "quick_insert" to "version-sensitive",
+            "modern_keypress_haptics" to "version-sensitive",
             "rounded_keyboard_panel" to "version-sensitive",
             "settings_homepage_override" to "version-sensitive",
             "simple_calculator" to "version-sensitive",
@@ -834,6 +836,14 @@ class GboardPortProductCatalogContractTest {
                 "gboardBluetoothMicrophoneFlagValuePatch",
                 FEATURE_ROOT + "bluetoothmicrophone/GboardBluetoothMicrophoneFlagValuePatch.kt",
                 FEATURE_ROOT + "bluetoothmicrophone/GboardBluetoothMicrophoneFeatureMarkerPatch.kt",
+            ),
+            FlagFeatureContract(
+                "modern_keypress_haptics",
+                GboardFlagFamilyFeature.MODERN_KEYPRESS_HAPTICS,
+                gboardHapticPrimitivesFlagValuePatch,
+                "gboardHapticPrimitivesFlagValuePatch",
+                FEATURE_ROOT + "hapticprimitives/GboardHapticPrimitivesFlagValuePatch.kt",
+                FEATURE_ROOT + "hapticprimitives/GboardHapticPrimitivesFeatureMarkerPatch.kt",
             ),
         )
         val SOFT_KEY_FEATURE_CONTRACTS = listOf(

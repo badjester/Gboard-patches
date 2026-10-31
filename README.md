@@ -189,6 +189,12 @@ Features already present in Gboard that are exposed by enabling hidden settings,
 </details>
 
 <details>
+  <summary><code>Modern keypress haptics</code></summary>
+
+  Uses Android's haptic primitives for keypresses instead of a plain buzz.
+</details>
+
+<details>
   <summary><code>Change emoji size</code></summary>
 
   Enables Gboard's emoji size setting.

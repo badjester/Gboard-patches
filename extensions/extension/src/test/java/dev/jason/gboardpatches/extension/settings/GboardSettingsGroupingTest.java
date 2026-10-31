@@ -120,6 +120,7 @@ public final class GboardSettingsGroupingTest {
                 "new GboardZhuyinBottomRowWeightSettingsFeature(context)",
                 "new GboardSymbolFooterOrderSettingsFeature(context)",
                 "new GboardEmojiSizeSettingsFeature(context)",
+                "new GboardHapticPrimitivesSettingsFeature(context)",
                 "new GboardAccessPointsMenuSettingsFeature(context)",
                 "new GboardSplitKeyboardSettingsFeature(context)",
                 "new GboardAccessibilityLayoutSettingsFeature(context)",
@@ -147,6 +148,9 @@ public final class GboardSettingsGroupingTest {
         Assert.assertTrue(availabilitySource.contains("FEATURE_ACCESS_POINT_COUNT"));
         Assert.assertTrue(availabilitySource.contains(
                 "dev.jason.gboardpatches.feature.access_point_count"));
+        Assert.assertTrue(availabilitySource.contains("FEATURE_HAPTIC_PRIMITIVES"));
+        Assert.assertTrue(availabilitySource.contains(
+                "dev.jason.gboardpatches.feature.haptic_primitives"));
     }
 
     @Test

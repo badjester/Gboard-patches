@@ -57,6 +57,8 @@ public final class GboardPatchesFeatureAvailability {
             "dev.jason.gboardpatches.feature.manual_incognito";
     public static final String FEATURE_EMOJI_SIZE =
             "dev.jason.gboardpatches.feature.emoji_size";
+    public static final String FEATURE_HAPTIC_PRIMITIVES =
+            "dev.jason.gboardpatches.feature.haptic_primitives";
     public static final String FEATURE_CURSOR_TRACKPAD =
             "dev.jason.gboardpatches.feature.cursor_trackpad";
     public static final String FEATURE_ACCESS_POINTS_MENU_STYLE =

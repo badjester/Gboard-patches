@@ -1774,6 +1774,26 @@
         <translation locale="en">Behavior</translation>
         <translation locale="zh-Hant">行為</translation>
     </string>
+    <string name="gboard_patches_modern_keypress_haptics_title">
+        <translation locale="en">Modern keypress haptics</translation>
+        <translation locale="zh-Hant">現代按鍵觸覺反饋</translation>
+    </string>
+    <string name="gboard_patches_modern_keypress_haptics_summary">
+        <translation locale="en">Uses Android\'s haptic primitives for keypresses instead of a plain buzz.</translation>
+        <translation locale="zh-Hant">按鍵時使用 Android 的觸覺圖元（haptic primitives），取代傳統震動。</translation>
+    </string>
+    <string name="gboard_patches_modern_keypress_haptics_error_title">
+        <translation locale="en">Modern keypress haptics unavailable</translation>
+        <translation locale="zh-Hant">現代按鍵觸覺反饋無法使用</translation>
+    </string>
+    <string name="gboard_patches_modern_keypress_haptics_error_summary">
+        <translation locale="en">The modern keypress haptics settings screen failed to load. Reopen Gboard settings and try again.</translation>
+        <translation locale="zh-Hant">現代按鍵觸覺反饋設定畫面載入失敗。請重新開啟 Gboard 設定再試一次。</translation>
+    </string>
+    <string name="gboard_patches_modern_keypress_haptics_section_feature">
+        <translation locale="en">Feature</translation>
+        <translation locale="zh-Hant">功能</translation>
+    </string>
     <string name="gboard_patches_advanced_voice_summary">
         <translation locale="en">Controls whether Advanced Voice Typing is forced on.</translation>
         <translation locale="zh-Hant">控制是否強制啟用進階語音輸入。</translation>

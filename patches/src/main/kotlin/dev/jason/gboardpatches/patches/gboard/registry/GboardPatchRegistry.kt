@@ -42,6 +42,8 @@ import dev.jason.gboardpatches.patches.gboard.features.customtheme.gboardCustomT
 import dev.jason.gboardpatches.patches.gboard.features.customtheme.gboardCustomThemeOfficialImportPatch
 import dev.jason.gboardpatches.patches.gboard.features.emojisize.gboardEmojiSizeFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.emojisize.gboardEmojiSizeFlagValuePatch
+import dev.jason.gboardpatches.patches.gboard.features.hapticprimitives.gboardHapticPrimitivesFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.hapticprimitives.gboardHapticPrimitivesFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.features.webclipboard.gboardWebClipboardAssetsPatch
 import dev.jason.gboardpatches.patches.gboard.features.webclipboard.gboardWebClipboardCapturePatch
 import dev.jason.gboardpatches.patches.gboard.features.webclipboard.gboardWebClipboardFeatureMarkerPatch
@@ -282,6 +284,23 @@ val gboardBluetoothMicrophonePatch = gboardPublicResourcePatch(
         gboardPatchesSettingsPatch,
         gboardBluetoothMicrophoneFeatureMarkerPatch,
         gboardBluetoothMicrophoneFlagValuePatch,
+    )
+}
+
+@Suppress("unused")
+val gboardHapticPrimitivesPatch = gboardPublicResourcePatch(
+    featureId = "modern_keypress_haptics",
+    name = "Modern keypress haptics",
+    description = "使用 Android 的觸覺圖元（haptic primitives）進行按鍵反饋，取代傳統震動。\n" +
+        "Uses Android's haptic primitives for keypresses — the crisp tick the rest of the system uses — instead of a plain buzz.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesSettingsPatch,
+        gboardHapticPrimitivesFeatureMarkerPatch,
+        gboardHapticPrimitivesFlagValuePatch,
     )
 }
 
@@ -850,6 +869,7 @@ object GboardPublishedPatchCatalog {
         gboardSimpleCalculatorPatch,
         gboardAdvancedVoiceTypingPatch,
         gboardBluetoothMicrophonePatch,
+        gboardHapticPrimitivesPatch,
         gboardEmojiSizePatch,
         gboardCursorTrackpadPatch,
         gboardAccessPointsMenuStylePatch,
